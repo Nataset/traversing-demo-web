@@ -1,3 +1,7 @@
+let select_start = false;
+let select_end = false;
+let mousedown = false;
+
 for (let i = 1; i < 391; i++) {
     const node = document.createElement("button");
     node.style.width = "100%";
@@ -8,9 +12,25 @@ for (let i = 1; i < 391; i++) {
 }
 
 document.querySelectorAll(".node").forEach((el) => {
-    el.onclick = () => {
-        el.style.backgroundColor = "white";
+    const changeColor = () => {
+        if (mousedown && !el.already_select) {
+            if (!select_start) {
+                el.style.backgroundColor = "green";
+                select_start = true;
+            } else if (!select_end) {
+                el.style.backgroundColor = "red";
+                select_end = true;
+            } else el.style.backgroundColor = "white";
+            el.already_select = true;
+        }
     };
+    el.already_select = false;
+    el.onmousedown = () => {
+        mousedown = true;
+        changeColor();
+    };
+    el.onmouseup = () => (mousedown = false);
+    el.onmouseover = changeColor;
 });
 
 document.querySelector("#reset").onclick = () => {
