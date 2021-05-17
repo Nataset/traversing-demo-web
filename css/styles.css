@@ -19,7 +19,7 @@ html {
 .inner-header {
     width: 80%;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
@@ -53,14 +53,14 @@ html {
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family: sans-serif;
+    text-transform: uppercase;
 }
 
 .content {
     display: grid;
     grid-template-columns: repeat(45, 1fr);
     grid-template-rows: repeat(20, 1fr);
-    /* justify-items: start;
-    align-items: start; */
     width: 100%;
 }
 

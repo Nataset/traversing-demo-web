@@ -26,37 +26,12 @@ class node {
 let select_start = false;
 let select_end = false;
 let mousedown = false;
+let ready_state = true;
 let start_node;
 let end_node;
 const X_SIZE = 20;
 const Y_SIZE = 45;
-
-const setPath = (path) => {
-    for (const node in path) {
-        const x = path[node].x;
-        const y = path[node].y;
-
-        document.getElementById(`node[${x}][${y}]`).style.backgroundColor = "blue";
-    }
-};
-
-const handleButtonOnCick = (el) => {
-    if (!el.already_select) {
-        if (!select_start) {
-            el.style.backgroundColor = "green";
-            select_start = true;
-            start_node = graph[el.x][el.y];
-        } else if (!select_end) {
-            el.style.backgroundColor = "red";
-            select_end = true;
-            end_node = graph[el.x][el.y];
-        } else {
-            el.style.backgroundColor = "white";
-            graph[el.x][el.y].visited = true;
-        }
-        el.already_select = true;
-    }
-};
+let graph = new Array();
 
 const creatNode = (x, y) => {
     const node = document.createElement("button");
@@ -83,8 +58,6 @@ const creatNode = (x, y) => {
     document.querySelector(".content").appendChild(node);
 };
 
-let graph = new Array();
-
 const creatGraph = (x, y) => {
     for (let i = 0; i < x; i++) {
         graph[i] = new Array();
@@ -100,6 +73,12 @@ const resetGraph = (graph) => {
         row.forEach((node) => {
             node.valueReset();
         });
+    });
+};
+
+const delay = (time) => {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, time);
     });
 };
 
@@ -126,23 +105,32 @@ const printGraph = (graph) => {
     });
 };
 
-const BFS = (start, end) => {
+const setPath = async (path) => {
+    for (const node in path) {
+        const x = path[node].x;
+        const y = path[node].y;
+        await delay(50);
+
+        document.getElementById(`node[${x}][${y}]`).style.backgroundColor = "blue";
+    }
+};
+
+const BFS = async (start, end) => {
     const queue = [];
     queue.push(start);
     start.visited = true;
 
     while (queue.length > 0) {
         start = queue.shift();
-        // console.log(`X: ${start.x}, Y:${start.y}`);
 
         for (let i = 0; i < start.neighbor.length; i++) {
             const curr = start.neighbor[i];
             if (curr.visited) continue;
-            // console.log(`X: ${curr.x}, Y:${curr.y}`);
-            // console.log(curr);
+
             curr.visited = true;
             queue.push(curr);
             curr.prev = start;
+
             if (curr == end) {
                 let tmp_curr = curr;
                 const path = [];
@@ -150,25 +138,52 @@ const BFS = (start, end) => {
                     path.push(tmp_curr.prev);
                     tmp_curr = tmp_curr.prev;
                 }
-                setPath(path.reverse());
+                await setPath(path.reverse());
                 return true;
             }
+            await delay(5);
+            document.getElementById(`node[${curr.x}][${curr.y}]`).style.backgroundColor = "#7a7a7a";
         }
     }
 };
 
-document.querySelector("#reset").onclick = () => {
-    select_start = false;
-    select_end = false;
-    mousedown = false;
-    start_node = undefined;
-    end_node = undefined;
-    resetNode();
-    resetGraph(graph);
+const handleButtonOnCick = (el) => {
+    if (!el.already_select && ready_state) {
+        if (!select_start) {
+            el.style.backgroundColor = "green";
+            select_start = true;
+            start_node = graph[el.x][el.y];
+        } else if (!select_end) {
+            el.style.backgroundColor = "red";
+            select_end = true;
+            end_node = graph[el.x][el.y];
+        } else {
+            el.style.backgroundColor = "white";
+            graph[el.x][el.y].visited = true;
+        }
+        el.already_select = true;
+    }
 };
 
-document.querySelector("#start").onclick = () => {
-    if (select_start && select_end) BFS(start_node, end_node);
+document.querySelector("#reset").onclick = () => {
+    if (ready_state) {
+        select_start = false;
+        select_end = false;
+        mousedown = false;
+        start_node = undefined;
+        end_node = undefined;
+        resetNode();
+        resetGraph(graph);
+    }
+};
+
+document.querySelector("#start").onclick = async () => {
+    if (select_start && select_end && ready_state) {
+        ready_state = false;
+        let find_node = await BFS(start_node, end_node);
+        if (!find_node) alert("can't find a way");
+    }
+    ready_state = true;
 };
 
 let resizeWindow = () => {
