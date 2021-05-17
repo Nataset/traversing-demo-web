@@ -1,11 +1,3 @@
-let select_start = false;
-let select_end = false;
-let mousedown = false;
-let start_node;
-let end_node;
-const X_SIZE = 5;
-const Y_SIZE = 5;
-
 class node {
     constructor(x, y) {
         this.x = x;
@@ -24,13 +16,25 @@ class node {
         if (y + 1 < Y_SIZE) neighbor.push(graph[x][y + 1]);
         return neighbor;
     }
+
+    valueReset() {
+        this.prev = false;
+        this.visited = false;
+    }
 }
+
+let select_start = false;
+let select_end = false;
+let mousedown = false;
+let start_node;
+let end_node;
+const X_SIZE = 20;
+const Y_SIZE = 45;
 
 const setPath = (path) => {
     for (const node in path) {
         const x = path[node].x;
         const y = path[node].y;
-        console.log(x, y);
 
         document.getElementById(`node[${x}][${y}]`).style.backgroundColor = "blue";
     }
@@ -79,7 +83,7 @@ const creatNode = (x, y) => {
     document.querySelector(".content").appendChild(node);
 };
 
-const graph = new Array();
+let graph = new Array();
 
 const creatGraph = (x, y) => {
     for (let i = 0; i < x; i++) {
@@ -89,6 +93,21 @@ const creatGraph = (x, y) => {
             creatNode(i, j);
         }
     }
+};
+
+const resetGraph = (graph) => {
+    graph.forEach((row) => {
+        row.forEach((node) => {
+            node.valueReset();
+        });
+    });
+};
+
+const resetNode = () => {
+    document.querySelectorAll(".node").forEach((el) => {
+        el.already_select = false;
+        el.style.backgroundColor = "black";
+    });
 };
 
 const setNeighbor = (graph) => {
@@ -131,7 +150,6 @@ const BFS = (start, end) => {
                     path.push(tmp_curr.prev);
                     tmp_curr = tmp_curr.prev;
                 }
-                console.log(path.reverse());
                 setPath(path.reverse());
                 return true;
             }
@@ -139,19 +157,14 @@ const BFS = (start, end) => {
     }
 };
 
-creatGraph(X_SIZE, Y_SIZE);
-
-setNeighbor(graph);
-
-// printGraph(graph);
-
 document.querySelector("#reset").onclick = () => {
     select_start = false;
     select_end = false;
-    document.querySelectorAll(".node").forEach((el) => {
-        el.already_select = false;
-        el.style.backgroundColor = "black";
-    });
+    mousedown = false;
+    start_node = undefined;
+    end_node = undefined;
+    resetNode();
+    resetGraph(graph);
 };
 
 document.querySelector("#start").onclick = () => {
@@ -164,3 +177,9 @@ let resizeWindow = () => {
 
 resizeWindow();
 window.onresize = resizeWindow;
+
+creatGraph(X_SIZE, Y_SIZE);
+
+setNeighbor(graph);
+
+// printGraph(graph);
