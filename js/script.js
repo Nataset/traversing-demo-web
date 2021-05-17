@@ -3,14 +3,14 @@ let select_end = false;
 let mousedown = false;
 let start_node;
 let end_node;
-const X_SIZE = 10;
-const Y_SIZE = 10;
+const X_SIZE = 5;
+const Y_SIZE = 5;
 
 class node {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.wall = false;
+        this.prev = false;
         this.visited = false;
     }
 
@@ -26,8 +26,17 @@ class node {
     }
 }
 
-const changeColor = (el) => {
-    console.log(graph[el.x][el.y]);
+const setPath = (path) => {
+    for (const node in path) {
+        const x = path[node].x;
+        const y = path[node].y;
+        console.log(x, y);
+
+        document.getElementById(`node[${x}][${y}]`).style.backgroundColor = "blue";
+    }
+};
+
+const handleButtonOnCick = (el) => {
     if (!el.already_select) {
         if (!select_start) {
             el.style.backgroundColor = "green";
@@ -39,7 +48,7 @@ const changeColor = (el) => {
             end_node = graph[el.x][el.y];
         } else {
             el.style.backgroundColor = "white";
-            graph[el.x][el.y].wall = true;
+            graph[el.x][el.y].visited = true;
         }
         el.already_select = true;
     }
@@ -51,19 +60,20 @@ const creatNode = (x, y) => {
     node.style.height = "100%";
     node.style.border = "2px solid white";
     node.className = "node";
+    node.id = `node[${x}][${y}]`;
 
     node.x = x;
     node.y = y;
     node.already_select = false;
     node.onmousedown = () => {
         mousedown = true;
-        changeColor(node);
+        handleButtonOnCick(node);
     };
     node.onmouseup = () => {
         mousedown = false;
     };
     node.onmouseover = () => {
-        if (mousedown) changeColor(node);
+        if (mousedown) handleButtonOnCick(node);
     };
 
     document.querySelector(".content").appendChild(node);
@@ -97,21 +107,35 @@ const printGraph = (graph) => {
     });
 };
 
-const BFS = (start) => {
+const BFS = (start, end) => {
     const queue = [];
     queue.push(start);
     start.visited = true;
 
     while (queue.length > 0) {
         start = queue.shift();
-        console.log(start);
+        // console.log(`X: ${start.x}, Y:${start.y}`);
 
-        start.neighbor.forEach((node) => {
-            if (node.visited == false) {
-                queue.push(node);
-                node.visited = true;
+        for (let i = 0; i < start.neighbor.length; i++) {
+            const curr = start.neighbor[i];
+            if (curr.visited) continue;
+            // console.log(`X: ${curr.x}, Y:${curr.y}`);
+            // console.log(curr);
+            curr.visited = true;
+            queue.push(curr);
+            curr.prev = start;
+            if (curr == end) {
+                let tmp_curr = curr;
+                const path = [];
+                while (tmp_curr.prev.prev) {
+                    path.push(tmp_curr.prev);
+                    tmp_curr = tmp_curr.prev;
+                }
+                console.log(path.reverse());
+                setPath(path.reverse());
+                return true;
             }
-        });
+        }
     }
 };
 
@@ -119,9 +143,7 @@ creatGraph(X_SIZE, Y_SIZE);
 
 setNeighbor(graph);
 
-BFS(graph[0][0]);
-
-printGraph(graph);
+// printGraph(graph);
 
 document.querySelector("#reset").onclick = () => {
     select_start = false;
@@ -130,6 +152,10 @@ document.querySelector("#reset").onclick = () => {
         el.already_select = false;
         el.style.backgroundColor = "black";
     });
+};
+
+document.querySelector("#start").onclick = () => {
+    if (select_start && select_end) BFS(start_node, end_node);
 };
 
 let resizeWindow = () => {
